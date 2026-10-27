@@ -31,8 +31,44 @@ function fav(b){b.textContent="★ お気に入り登録済み";b.style.backgrou
 
   e.target.reset();
   await showRecords();
-  alert("成長記録をSupabaseに保存しました！🌷");
-}function showRecords(){let el=document.getElementById("recordList");if(!el)return;let list=JSON.parse(localStorage.getItem("records")||"[]");el.innerHTML=list.map(r=>`<div class="record"><b>🌱 ${r.t}</b><br><small>${r.d}</small><p>${r.x||""}</p></div>`).join("")}function sendContact(e){e.preventDefault();alert("連絡帳を送信しました！（デモ）");e.target.reset()}function sendChat(){let i=document.getElementById("chatInput"),v=i.value.trim();if(!v)return;document.getElementById("chatList").innerHTML+=`<div class="bubble me">${v}</div>`;i.value=""}showRecords();
+  alert("成長記録をSupabaseに保存しました！🌷");}
+async function showRecords() {
+  const el = document.getElementById("recordList");
+  if (!el) return;
+
+  const { data: { user }, error: userError } =
+    await supabaseClient.auth.getUser();
+
+  if (userError || !user) {
+    el.textContent = "記録を見るには、先にログインしてね。";
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("growth_records")
+    .select("record_date, title, notes")
+    .eq("user_id", user.id)
+    .order("record_date", { ascending: false });
+
+  if (error) {
+    console.error(error);
+    el.textContent = "記録を読み込めませんでした。";
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    el.textContent = "まだ成長記録はありません。";
+    return;
+  }
+
+  el.innerHTML = data.map(r => `
+    <div class="record">
+      <b>🌱 ${r.title}</b><br>
+      <small>${r.record_date}</small>
+      <p>${r.notes || ""}</p>
+    </div>
+  `).join("");
+}function sendContact(e){e.preventDefault();alert("連絡帳を送信しました！（デモ）");e.target.reset()}function sendChat(){let i=document.getElementById("chatInput"),v=i.value.trim();if(!v)return;document.getElementById("chatList").innerHTML+=`<div class="bubble me">${v}</div>`;i.value=""}showRecords();
 // ログイン処理
 const loginForm = document.getElementById("loginForm");
 
