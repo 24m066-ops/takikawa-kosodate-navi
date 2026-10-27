@@ -93,5 +93,6 @@ if (loginForm) {
     }
 
     message.textContent = "ログインできたよ！🌷";
+    await showRecords();
   });
 }
