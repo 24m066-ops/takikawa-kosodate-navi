@@ -1,4 +1,35 @@
-function fav(b){b.textContent="★ お気に入り登録済み";b.style.background="#f8d9cf"}function findPlace(){let v=document.getElementById("placeInput").value.trim();alert(v?`「${v}」を検索しました。`:"検索したい施設を入力してください。")}async function saveRecord(e) {
+async function fav(b) {
+  const { data: { user }, error: userError } =
+    await supabaseClient.auth.getUser();
+
+  if (userError || !user) {
+    alert("先にホーム画面でログインしてね。");
+    return;
+  }
+
+  const card = b.closest(".card");
+  const place_name = card.querySelector("h3").textContent.trim();
+  const place_id = place_name.includes("公園") ? "park" : "hospital";
+
+  const { error } = await supabaseClient
+    .from("favorites")
+    .insert([{
+      user_id: user.id,
+      place_id: place_id,
+      place_name: place_name
+    }]);
+
+  if (error) {
+    console.error(error);
+    alert("お気に入りを保存できませんでした。");
+    return;
+  }
+
+  b.textContent = "★ お気に入り登録済み";
+  b.style.background = "#f8d9cf";
+
+  alert("お気に入りを保存しました！🌷");
+}function findPlace(){let v=document.getElementById("placeInput").value.trim();alert(v?`「${v}」を検索しました。`:"検索したい施設を入力してください。")}async function saveRecord(e) {
   e.preventDefault();
 
   const message = document.getElementById("recordMessage");
