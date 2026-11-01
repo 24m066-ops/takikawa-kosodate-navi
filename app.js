@@ -11,25 +11,53 @@ async function fav(b) {
   const place_name = card.querySelector("h3").textContent.trim();
   const place_id = place_name.includes("公園") ? "park" : "hospital";
 
-  const { error } = await supabaseClient
-    .from("favorites")
-    .insert([{
-      user_id: user.id,
-      place_id: place_id,
-      place_name: place_name
-    }]);
+  b.disabled = true;
 
-  if (error) {
+  try {
+    const { data, error: checkError } = await supabaseClient
+      .from("favorites")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("place_id", place_id);
+
+    if (checkError) throw checkError;
+
+    if (data.length > 0) {
+      const { error } = await supabaseClient
+        .from("favorites")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("place_id", place_id);
+
+      if (error) throw error;
+
+      b.textContent = "☆ お気に入り";
+      b.style.background = "";
+      alert("お気に入りを解除しました！🌷");
+
+    } else {
+      const { error } = await supabaseClient
+        .from("favorites")
+        .insert([{
+          user_id: user.id,
+          place_id: place_id,
+          place_name: place_name
+        }]);
+
+      if (error) throw error;
+
+      b.textContent = "★ お気に入り登録済み";
+      b.style.background = "#f8d9cf";
+      alert("お気に入りを保存しました！🌷");
+    }
+
+  } catch (error) {
     console.error(error);
-    alert("お気に入りを保存できませんでした。");
-    return;
+    alert("お気に入りの変更に失敗しました。");
+  } finally {
+    b.disabled = false;
   }
-
-  b.textContent = "★ お気に入り登録済み";
-  b.style.background = "#f8d9cf";
-
-  alert("お気に入りを保存しました！🌷");
-}function findPlace(){let v=document.getElementById("placeInput").value.trim();alert(v?`「${v}」を検索しました。`:"検索したい施設を入力してください。")}async function saveRecord(e) {
+function findPlace(){let v=document.getElementById("placeInput").value.trim();alert(v?`「${v}」を検索しました。`:"検索したい施設を入力してください。")}async function saveRecord(e) {
   e.preventDefault();
 
   const message = document.getElementById("recordMessage");
