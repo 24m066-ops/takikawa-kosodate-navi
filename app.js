@@ -57,6 +57,7 @@ async function fav(b) {
   } finally {
     b.disabled = false;
   }
+}
 function findPlace(){let v=document.getElementById("placeInput").value.trim();alert(v?`「${v}」を検索しました。`:"検索したい施設を入力してください。")}async function saveRecord(e) {
   e.preventDefault();
 
