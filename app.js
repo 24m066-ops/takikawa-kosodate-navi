@@ -156,3 +156,38 @@ if (loginForm) {
     await showRecords();
   });
 }
+async function loadFavorites() {
+  const buttons = document.querySelectorAll("#places .card button");
+  if (buttons.length === 0) return;
+
+  const { data: { user }, error: userError } =
+    await supabaseClient.auth.getUser();
+
+  if (userError || !user) return;
+
+  const { data, error } = await supabaseClient
+    .from("favorites")
+    .select("place_id")
+    .eq("user_id", user.id);
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  buttons.forEach(b => {
+    const card = b.closest(".card");
+    const place_name = card.querySelector("h3").textContent.trim();
+    const place_id = place_name.includes("公園") ? "park" : "hospital";
+
+    if (data.some(f => f.place_id === place_id)) {
+      b.textContent = "★ お気に入り登録済み";
+      b.style.background = "#f8d9cf";
+    } else {
+      b.textContent = "☆ お気に入り";
+      b.style.background = "";
+    }
+  });
+}
+
+loadFavorites();
