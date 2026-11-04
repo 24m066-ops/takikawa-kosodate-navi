@@ -57,8 +57,7 @@ async function fav(b) {
   } finally {
     b.disabled = false;
   }
-}
-function findPlace() {
+}function findPlace() {
   const keyword = document.getElementById("placeInput").value.trim();
 
   if (!keyword) {
@@ -66,12 +65,14 @@ function findPlace() {
     return;
   }
 
+  const map = document.getElementById("facilityMap");
   const searchWord = "北海道滝川市 " + keyword;
 
-  const url = "https://www.google.com/maps/search/?api=1&query="
-    + encodeURIComponent(searchWord);
+  const url = "https://www.google.com/maps?q="
+    + encodeURIComponent(searchWord)
+    + "&output=embed";
 
-  window.open(url, "_blank");
+  map.src = url;
 }async function saveRecord(e) {
   e.preventDefault();
 
