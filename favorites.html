@@ -1,0 +1,114 @@
+
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>お気に入り｜たきかわ子育てナビ</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <a class="logo" href="index.html">
+      🌷 たきかわ子育てナビ
+      <small>毎日の子育てを、もっと安心・もっと楽しく</small>
+    </a>
+    <nav class="menu">
+      <a href="events.html">📅 イベント</a>
+      <a href="notifications.html">🔔 通知</a>
+      <a href="places.html">📍 施設</a>
+      <a href="favorites.html">❤️ お気に入り</a>
+      <a href="records.html">🌱 記録</a>
+      <a href="contact.html">📖 連絡帳</a>
+      <a href="chat.html">💬 相談</a>
+    </nav>
+  </header>
+
+  <section class="section">
+    <div class="title">
+      <h2>❤️ お気に入り一覧</h2>
+      <p>登録した施設をまとめて確認できます</p>
+    </div>
+    <div id="favoriteList">
+      <p>お気に入りを読み込み中...</p>
+    </div>
+  </section>
+
+  <footer class="footer">
+    🌷 たきかわ子育てナビ
+  </footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script>
+async function showFavorites() {
+  const list = document.getElementById("favoriteList");
+
+  const { data: { user }, error: userError } =
+    await supabaseClient.auth.getUser();
+
+  if (userError || !user) {
+    list.textContent = "お気に入りを見るには、先にホームでログインしてね。";
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("favorites")
+    .select("place_id, place_name")
+    .eq("user_id", user.id);
+
+  if (error) {
+    console.error(error);
+    list.textContent = "お気に入りを読み込めませんでした。";
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    list.textContent = "まだお気に入りはありません。";
+    return;
+  }
+
+  list.innerHTML = "";
+
+  data.forEach(f => {
+    const card = document.createElement("div");
+    card.className = "card";
+
+    const name = document.createElement("h3");
+    name.textContent = f.place_name;
+
+    const button = document.createElement("button");
+    button.className = "btn light";
+    button.textContent = "★ お気に入り解除";
+
+    button.addEventListener("click", async () => {
+      button.disabled = true;
+
+      const { error: deleteError } = await supabaseClient
+        .from("favorites")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("place_id", f.place_id);
+
+      if (deleteError) {
+        console.error(deleteError);
+        alert("解除できませんでした。");
+        button.disabled = false;
+        return;
+      }
+
+      await showFavorites();
+    });
+
+    card.appendChild(name);
+    card.appendChild(button);
+    list.appendChild(card);
+  });
+}
+
+showFavorites();
+</script>
+</body>
+</html>
