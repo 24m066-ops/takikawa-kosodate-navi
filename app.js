@@ -174,7 +174,7 @@ if (loginForm) {
   });
 }
 async function loadFavorites() {
-  const buttons = document.querySelectorAll("#places .card button");
+  const buttons = document.querySelectorAll('#places .card button[onclick="fav(this)"]');
   if (buttons.length === 0) return;
 
   const { data: { user }, error: userError } =
