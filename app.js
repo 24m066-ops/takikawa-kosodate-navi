@@ -57,7 +57,8 @@ async function fav(b) {
   } finally {
     b.disabled = false;
   }
-}function findPlace() {
+}
+function findPlace() {
   const keyword = document.getElementById("placeInput").value.trim();
 
   if (!keyword) {
@@ -73,7 +74,8 @@ async function fav(b) {
     + "&output=embed";
 
   map.src = url;
-}async function saveRecord(e) {
+}
+async function saveRecord(e) {
   e.preventDefault();
 
   const message = document.getElementById("recordMessage");
