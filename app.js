@@ -9,7 +9,7 @@ async function fav(b) {
 
   const card = b.closest(".card");
   const place_name = card.querySelector("h3").textContent.trim();
-  const place_id = place_name.includes("公園") ? "park" : "hospital";
+  const place_id = place_name;
 
   b.disabled = true;
 
@@ -195,7 +195,7 @@ async function loadFavorites() {
   buttons.forEach(b => {
     const card = b.closest(".card");
     const place_name = card.querySelector("h3").textContent.trim();
-    const place_id = place_name.includes("公園") ? "park" : "hospital";
+    const place_id = place_name;
 
     if (data.some(f => f.place_id === place_id)) {
       b.textContent = "★ お気に入り登録済み";
