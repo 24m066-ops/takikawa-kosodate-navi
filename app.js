@@ -208,3 +208,20 @@ async function loadFavorites() {
 }
 
 loadFavorites();
+function showPlaceMap(place) {
+  const map = document.getElementById("facilityMap");
+
+  if (!map) {
+    alert("地図が見つかりません。");
+    return;
+  }
+
+  map.src = "https://www.google.com/maps?q="
+    + encodeURIComponent(place)
+    + "&output=embed";
+
+  map.scrollIntoView({
+    behavior: "smooth",
+    block: "center"
+  });
+}
