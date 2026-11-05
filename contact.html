@@ -1,1 +1,269 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>電子連絡帳｜たきかわ子育てナビ</title><link rel="stylesheet" href="style.css"></head><body><div class="app"><header class="top"><a class="logo" href="index.html">🌷 たきかわ子育てナビ<small>毎日の子育てを、もっと安心・もっと楽しく</small></a><nav class="menu"><a href="events.html">📅 イベント</a><a href="notifications.html">🔔 通知</a><a href="places.html">📍 施設</a><a href="records.html">🌱 記録</a><a href="contact.html">📖 連絡帳</a><a href="chat.html">💬 相談</a></nav></header><section class="section"><div class="title"><h2>📖 電子連絡帳</h2><p>保育所・幼稚園との連絡をかんたんに</p></div><form class="form" onsubmit="sendContact(event)"><select><option>連絡先を選択</option><option>○○保育所</option><option>○○幼稚園</option></select><input id="ctitle" placeholder="件名" required><textarea id="ctext" rows="6" placeholder="連絡内容" required></textarea><button class="btn">送信する</button></form></section><footer class="footer">🌷 たきかわ子育てナビ<br><small>子育てする人みんなが、安心して暮らせるまちへ。</small></footer></div><script src="app.js"></script></body></html>
+
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>電子連絡帳｜たきかわ子育てナビ</title>
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    .contact-box {
+      background: white;
+      padding: 22px;
+      border-radius: 20px;
+      margin: 20px 0;
+    }
+
+    .contact-box label {
+      display: block;
+      font-weight: bold;
+      margin-top: 15px;
+    }
+
+    .contact-box input,
+    .contact-box select,
+    .contact-box textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px;
+      margin-top: 7px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      font: inherit;
+    }
+
+    .contact-card {
+      background: white;
+      border-radius: 15px;
+      padding: 18px;
+      margin: 12px 0;
+    }
+
+    .contact-card p {
+      margin: 8px 0;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+  </style>
+</head>
+
+<body>
+<div class="app">
+
+  <header class="top">
+    <a class="logo" href="index.html">
+      🌷 たきかわ子育てナビ
+      <small>毎日の子育てを、もっと安心・もっと楽しく</small>
+    </a>
+
+    <nav class="menu">
+      <a href="events.html">📅 イベント</a>
+      <a href="notifications.html">🔔 通知</a>
+      <a href="places.html">📍 施設</a>
+      <a href="favorites.html">❤️ お気に入り</a>
+      <a href="records.html">🌱 記録</a>
+      <a href="contact.html">📖 連絡帳</a>
+      <a href="chat.html">💬 相談</a>
+    </nav>
+  </header>
+
+  <section class="section">
+
+    <div class="title">
+      <h2>📖 電子連絡帳</h2>
+      <p>毎日の子どもの様子を記録しよう</p>
+    </div>
+
+    <div class="contact-box">
+      <h3>🌷 今日の連絡帳を書く</h3>
+
+      <form id="contactForm">
+
+        <label for="contactDate">📅 日付</label>
+        <input type="date" id="contactDate" required>
+
+        <label for="contactPlace">🏫 連絡先（記録用）</label>
+        <select id="contactPlace">
+          <option value="未指定">選択してください</option>
+          <option value="保育所">保育所</option>
+          <option value="幼稚園">幼稚園</option>
+          <option value="その他">その他</option>
+        </select>
+
+        <label for="contactMeal">🍚 食事の様子</label>
+        <select id="contactMeal">
+          <option>よく食べた</option>
+          <option>普通</option>
+          <option>あまり食べなかった</option>
+        </select>
+
+        <label for="contactSleep">🌙 睡眠時間</label>
+        <input type="text" id="contactSleep"
+          placeholder="例：8時間">
+
+        <label for="contactHealth">🌡️ 体調</label>
+        <select id="contactHealth">
+          <option>元気</option>
+          <option>少し疲れている</option>
+          <option>体調がよくない</option>
+        </select>
+
+        <label for="contactText">📝 今日の様子・連絡事項</label>
+        <textarea id="contactText" rows="5"
+          placeholder="今日あったことや伝えたいことを書いてね"></textarea>
+
+        <button class="btn green" type="submit">
+          💾 連絡帳を保存する
+        </button>
+
+      </form>
+    </div>
+
+    <h3>📚 過去の連絡帳</h3>
+    <div id="contactList"></div>
+
+    <p style="font-size:12px;color:#777;">
+      ※ この連絡帳は試作版です。
+      内容は現在使用しているブラウザに保存され、
+      保育所や幼稚園には送信されません。
+      共用端末では個人情報を入力しないでください。
+    </p>
+
+  </section>
+
+  <footer class="footer">
+    🌷 たきかわ子育てナビ
+    <small>子育てする人みんなが、安心して暮らせるまちへ。</small>
+  </footer>
+
+</div>
+
+<script>
+const contactStorageKey = "takikawaContacts";
+
+function getContacts() {
+  try {
+    const data = JSON.parse(
+      localStorage.getItem(contactStorageKey) || "[]"
+    );
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveContacts(data) {
+  localStorage.setItem(
+    contactStorageKey,
+    JSON.stringify(data)
+  );
+}
+
+function renderContacts() {
+  const list = document.getElementById("contactList");
+  list.innerHTML = "";
+
+  const contacts = getContacts()
+    .sort((a, b) => b.date.localeCompare(a.date));
+
+  if (contacts.length === 0) {
+    list.textContent = "まだ連絡帳の記録はありません。";
+    return;
+  }
+
+  contacts.forEach(item => {
+    const card = document.createElement("div");
+    card.className = "contact-card";
+
+    const heading = document.createElement("h3");
+    heading.textContent = "📅 " + item.date;
+
+    const details = [
+      "🏫 連絡先：" + item.place,
+      "🍚 食事：" + item.meal,
+      "🌙 睡眠：" + (item.sleep || "未入力"),
+      "🌡️ 体調：" + item.health,
+      "📝 今日の様子：" + (item.text || "未入力")
+    ];
+
+    card.appendChild(heading);
+
+    details.forEach(detail => {
+      const p = document.createElement("p");
+      p.textContent = detail;
+      card.appendChild(p);
+    });
+
+    const button = document.createElement("button");
+    button.className = "btn light";
+    button.textContent = "🗑️ 削除する";
+
+    button.onclick = () => {
+      if (!confirm("この記録を削除しますか？")) {
+        return;
+      }
+
+      const updated = getContacts()
+        .filter(c => c.id !== item.id);
+
+      saveContacts(updated);
+      renderContacts();
+    };
+
+    card.appendChild(button);
+    list.appendChild(card);
+  });
+}
+
+document.getElementById("contactDate").value =
+  new Date(
+    Date.now() - new Date().getTimezoneOffset() * 60000
+  ).toISOString().slice(0, 10);
+
+document.getElementById("contactForm")
+  .addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const item = {
+      id: crypto.randomUUID(),
+      date: document.getElementById("contactDate").value,
+      place: document.getElementById("contactPlace").value,
+      meal: document.getElementById("contactMeal").value,
+      sleep: document.getElementById("contactSleep").value.trim(),
+      health: document.getElementById("contactHealth").value,
+      text: document.getElementById("contactText").value.trim()
+    };
+
+    if (!item.date) {
+      alert("日付を選んでね！");
+      return;
+    }
+
+    try {
+      const contacts = getContacts();
+      contacts.push(item);
+      saveContacts(contacts);
+
+      this.reset();
+
+      document.getElementById("contactDate").value =
+        new Date(
+          Date.now() -
+          new Date().getTimezoneOffset() * 60000
+        ).toISOString().slice(0, 10);
+
+      renderContacts();
+      alert("連絡帳を保存しました！🌷");
+
+    } catch (error) {
+      console.error(error);
+      alert("保存できませんでした。");
+    }
+  });
+
+renderContacts();
+</script>
+
+</body>
+</html>
