@@ -1,4 +1,260 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>通知・健診｜たきかわ子育てナビ</title><link rel="stylesheet" href="style.css"></head><body><div class="app"><header class="top"><a class="logo" href="index.html">🌷 たきかわ子育てナビ<small>毎日の子育てを、もっと安心・もっと楽しく</small></a><nav class="menu"><a href="events.html">📅 イベント</a><a href="notifications.html">🔔 通知</a><a href="places.html">📍 施設</a><a href="records.html">🌱 記録</a><a href="contact.html">📖 連絡帳</a><a href="chat.html">💬 相談</a></nav></header><section class="section"><div class="title"><h2>🔔 通知・予定</h2><p>大切な予定を見逃さないように</p></div>
-<div class="notice">💉 <b>予防接種のお知らせ</b><br>次回の予防接種予定があります。<br><button class="btn" onclick="alert('カレンダーに登録しました！')">予定を登録</button></div>
-<div class="notice">🩺 <b>乳幼児健診のお知らせ</b><br>健診の日程を確認しましょう。<br><button class="btn green" onclick="alert('通知を設定しました！')">通知を設定</button></div>
-</section><footer class="footer">🌷 たきかわ子育てナビ<br><small>子育てする人みんなが、安心して暮らせるまちへ。</small></footer></div><script src="app.js"></script></body></html>
+
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>通知・健診｜たきかわ子育てナビ</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .schedule-box {
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    .schedule-box input,
+    .schedule-box select,
+    .schedule-box textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px;
+      margin: 8px 0 15px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      font: inherit;
+    }
+    .schedule-box label {
+      font-weight: bold;
+    }
+    .schedule-card {
+      background: white;
+      border-radius: 15px;
+      padding: 18px;
+      margin: 12px 0;
+    }
+    .schedule-card p {
+      margin: 8px 0;
+    }
+    .reminder {
+      background: #fff0d9;
+      padding: 15px;
+      border-radius: 12px;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <header class="top">
+    <a class="logo" href="index.html">
+      🌷 たきかわ子育てナビ
+      <small>毎日の子育てを、もっと安心・もっと楽しく</small>
+    </a>
+    <nav class="menu">
+      <a href="events.html">📅 イベント</a>
+      <a href="notifications.html">🔔 通知</a>
+      <a href="places.html">📍 施設</a>
+      <a href="favorites.html">❤️ お気に入り</a>
+      <a href="records.html">🌱 記録</a>
+      <a href="contact.html">📖 連絡帳</a>
+      <a href="chat.html">💬 相談</a>
+    </nav>
+  </header>
+
+  <section class="section">
+    <div class="title">
+      <h2>🔔 通知・予定</h2>
+      <p>大切な予定を見逃さないように</p>
+    </div>
+
+    <h3>🌷 もうすぐの予定</h3>
+    <div id="reminderList"></div>
+
+    <div class="schedule-box">
+      <h3>📅 新しい予定を登録</h3>
+
+      <form id="scheduleForm">
+
+        <label for="scheduleType">予定の種類</label>
+        <select id="scheduleType" required>
+          <option value="💉 予防接種">💉 予防接種</option>
+          <option value="🩺 乳幼児健診">🩺 乳幼児健診</option>
+          <option value="📅 その他の予定">📅 その他の予定</option>
+        </select>
+
+        <label for="scheduleTitle">予定の名前</label>
+        <input id="scheduleTitle"
+          placeholder="例：予防接種の予約"
+          required>
+
+        <label for="scheduleDate">予定の日付</label>
+        <input id="scheduleDate"
+          type="date"
+          required>
+
+        <label for="scheduleMemo">メモ（任意）</label>
+        <textarea id="scheduleMemo"
+          placeholder="例：持ち物や予約時間"
+          rows="3"></textarea>
+
+        <button type="submit" class="btn green">
+          💾 予定を保存する
+        </button>
+      </form>
+    </div>
+
+    <h3>📋 登録した予定一覧</h3>
+    <div id="scheduleList"></div>
+
+    <p style="font-size:12px;color:#777;">
+      ※ お知らせは、このページを開いたときに表示されます。
+      アプリを閉じている間のプッシュ通知ではありません。
+      予防接種や健診の正式な日程は、医療機関や自治体に確認してください。
+    </p>
+  </section>
+
+  <footer class="footer">
+    🌷 たきかわ子育てナビ
+    <small>子育てする人みんなが、安心して暮らせるまちへ。</small>
+  </footer>
+</div>
+
+<script>
+const storageKey = "takikawaSchedules";
+
+function getSchedules() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(storageKey) || "[]");
+    return Array.isArray(saved) ? saved : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveSchedules(schedules) {
+  localStorage.setItem(storageKey, JSON.stringify(schedules));
+}
+
+function makeDate(text) {
+  const parts = text.split("-").map(Number);
+  return new Date(parts[0], parts[1] - 1, parts[2]);
+}
+
+function daysUntil(dateText) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const target = makeDate(dateText);
+  return Math.round((target - today) / 86400000);
+}
+
+function renderSchedules() {
+  const list = document.getElementById("scheduleList");
+  const reminders = document.getElementById("reminderList");
+
+  list.innerHTML = "";
+  reminders.innerHTML = "";
+
+  const schedules = getSchedules()
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  if (schedules.length === 0) {
+    list.textContent = "まだ予定は登録されていません。";
+  }
+
+  let reminderCount = 0;
+
+  schedules.forEach(item => {
+    const card = document.createElement("div");
+    card.className = "schedule-card";
+
+    const title = document.createElement("h3");
+    title.textContent = item.type + "｜" + item.title;
+
+    const date = document.createElement("p");
+    date.textContent = "📅 " + item.date;
+
+    const memo = document.createElement("p");
+    memo.textContent = item.memo || "";
+
+    const removeButton = document.createElement("button");
+    removeButton.className = "btn light";
+    removeButton.textContent = "🗑️ 削除";
+    removeButton.onclick = () => {
+      if (!confirm("この予定を削除しますか？")) return;
+
+      const updated = getSchedules()
+        .filter(s => s.id !== item.id);
+
+      saveSchedules(updated);
+      renderSchedules();
+    };
+
+    card.append(title, date, memo, removeButton);
+    list.appendChild(card);
+
+    const days = daysUntil(item.date);
+
+    if (days >= 0 && days <= 3) {
+      reminderCount++;
+
+      const notice = document.createElement("div");
+      notice.className = "reminder";
+
+      let message = "";
+
+      if (days === 0) {
+        message = "今日が予定日です！";
+      } else {
+        message = "あと" + days + "日です！";
+      }
+
+      notice.textContent =
+        "🔔 " + item.title + "：" + message;
+
+      reminders.appendChild(notice);
+    }
+  });
+
+  if (reminderCount === 0) {
+    reminders.textContent = "現在、3日以内の予定はありません。";
+  }
+}
+
+document.getElementById("scheduleForm")
+  .addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const item = {
+      id: crypto.randomUUID(),
+      type: document.getElementById("scheduleType").value,
+      title: document.getElementById("scheduleTitle").value.trim(),
+      date: document.getElementById("scheduleDate").value,
+      memo: document.getElementById("scheduleMemo").value.trim()
+    };
+
+    if (!item.title || !item.date) {
+      alert("予定名と日付を入力してね！");
+      return;
+    }
+
+    const schedules = getSchedules();
+    schedules.push(item);
+
+    try {
+      saveSchedules(schedules);
+      this.reset();
+      renderSchedules();
+      alert("予定を保存しました！🌷");
+    } catch (error) {
+      console.error(error);
+      alert("保存できませんでした。");
+    }
+  });
+
+renderSchedules();
+</script>
+</body>
+</html>
