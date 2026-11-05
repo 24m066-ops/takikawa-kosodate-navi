@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="ja">
 <head>
@@ -7,74 +8,74 @@
   <link rel="stylesheet" href="style.css">
 
   <style>
-    .chat-box {
-      background: white;
-      padding: 22px;
-      border-radius: 20px;
-      margin: 20px 0;
+    .chat-box,.post-card {
+      background:white;
+      padding:22px;
+      border-radius:20px;
+      margin:20px 0;
     }
 
     .chat-box input,
     .chat-box select,
     .chat-box textarea {
-      width: 100%;
-      box-sizing: border-box;
-      padding: 12px;
-      margin: 8px 0 15px;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      font: inherit;
+      width:100%;
+      box-sizing:border-box;
+      padding:12px;
+      margin:8px 0 15px;
+      border:1px solid #ddd;
+      border-radius:10px;
+      font:inherit;
     }
 
     .chat-box label {
-      display: block;
-      font-weight: bold;
-      margin-top: 10px;
+      display:block;
+      font-weight:bold;
+      margin-top:10px;
     }
 
-    .post-card {
-      background: white;
-      padding: 20px;
-      border-radius: 18px;
-      margin: 15px 0;
-    }
-
-    .post-card p {
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
+    .post-card p,.reply p {
+      white-space:pre-wrap;
+      overflow-wrap:anywhere;
     }
 
     .reply {
-      background: #f3f9f6;
-      padding: 12px;
-      border-radius: 12px;
-      margin: 10px 0;
+      background:#f3f9f6;
+      padding:12px;
+      border-radius:12px;
+      margin:10px 0;
     }
 
     .reply-form {
-      display: flex;
-      gap: 8px;
-      margin-top: 12px;
+      display:flex;
+      gap:8px;
+      margin-top:12px;
     }
 
     .reply-form input {
-      flex: 1;
-      min-width: 0;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 10px;
+      flex:1;
+      min-width:0;
+      padding:10px;
+      border:1px solid #ddd;
+      border-radius:10px;
     }
 
     .post-actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-top: 12px;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:12px;
     }
 
     .post-date {
-      color: #888;
-      font-size: 12px;
+      color:#888;
+      font-size:12px;
+    }
+
+    .chat-message {
+      padding:12px;
+      border-radius:12px;
+      background:#fff5f0;
+      margin:15px 0;
     }
   </style>
 </head>
@@ -100,17 +101,19 @@
   </header>
 
   <section class="section">
-
     <div class="title">
       <h2>💬 子育て相談ひろば</h2>
-      <p>子育ての悩みや情報を共有しよう</p>
+      <p>子育ての悩みや情報をみんなで共有しよう🌷</p>
+    </div>
+
+    <div id="loginNotice" class="chat-message">
+      ログイン状態を確認しています...
     </div>
 
     <div class="chat-box">
       <h3>🌷 新しく相談する</h3>
 
       <form id="postForm">
-
         <label for="postCategory">相談のカテゴリー</label>
         <select id="postCategory">
           <option>🌳 お出かけ・遊び場</option>
@@ -122,68 +125,133 @@
         <label for="postTitle">相談のタイトル</label>
         <input id="postTitle"
           placeholder="例：おすすめの公園を教えてください"
-          required maxlength="100">
+          maxlength="100" required>
 
         <label for="postText">相談内容</label>
         <textarea id="postText" rows="5"
           placeholder="相談したいことを書いてね"
-          required maxlength="2000"></textarea>
+          maxlength="2000" required></textarea>
 
-        <button class="btn green" type="submit">
+        <button id="postButton"
+          class="btn green" type="submit" disabled>
           📝 相談を投稿する
         </button>
       </form>
     </div>
 
-    <h3>📚 みんなの相談（試作版）</h3>
-    <div id="postList"></div>
+    <h3>📚 みんなの相談</h3>
+    <button class="btn light" id="reloadButton"
+      type="button">🔄 最新の投稿を表示</button>
+
+    <div id="postList">読み込み中...</div>
 
     <p style="font-size:12px;color:#777;">
-      ※ 現在は試作版です。投稿や返信は、このブラウザ内だけに
-      保存されます。他の利用者には共有されません。
-      名前・住所・電話番号などの個人情報は入力しないでください。
+      ※ 現在はテスト版です。投稿はログインした利用者に
+      共有されます。名前・住所・電話番号・子どもの
+      個人情報などは入力しないでください。
+      緊急の相談には使用しないでください。
     </p>
-
   </section>
 
   <footer class="footer">
     🌷 たきかわ子育てナビ
     <small>子育てする人みんなが、安心して暮らせるまちへ。</small>
   </footer>
-
 </div>
 
-<script>
-const chatStorageKey = "takikawaChatPosts";
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
 
-function getPosts() {
+<script>
+const db = supabaseClient;
+let currentUser = null;
+
+const postList = document.getElementById("postList");
+const postForm = document.getElementById("postForm");
+const postButton = document.getElementById("postButton");
+const loginNotice = document.getElementById("loginNotice");
+
+function showDate(value) {
+  return new Date(value).toLocaleString("ja-JP");
+}
+
+function makeButton(text, className = "btn light") {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = className;
+  button.textContent = text;
+  return button;
+}
+
+async function initChat() {
   try {
-    const data = JSON.parse(
-      localStorage.getItem(chatStorageKey) || "[]"
-    );
-    return Array.isArray(data) ? data : [];
-  } catch {
-    return [];
+    const { data, error } = await db.auth.getUser();
+    if (error) throw error;
+
+    currentUser = data.user;
+
+    if (!currentUser) {
+      loginNotice.textContent =
+        "🔐 相談を利用するには、ホーム画面でログインしてください。";
+      postButton.disabled = true;
+      postList.textContent = "ログインすると相談を表示できます。";
+      return;
+    }
+
+    loginNotice.textContent =
+      "🌷 ログイン中です。相談や返信を利用できます！";
+    postButton.disabled = false;
+
+    await loadPosts();
+  } catch (error) {
+    console.error(error);
+    loginNotice.textContent =
+      "ログイン状態を確認できませんでした。";
+    postList.textContent = "読み込みに失敗しました。";
   }
 }
 
-function savePosts(posts) {
-  localStorage.setItem(
-    chatStorageKey,
-    JSON.stringify(posts)
-  );
-}
+async function loadPosts() {
+  postList.textContent = "相談を読み込んでいます...";
 
-function renderPosts() {
-  const list = document.getElementById("postList");
-  list.innerHTML = "";
+  const { data: posts, error } = await db
+    .from("chat_posts")
+    .select("id,user_id,category,title,content,created_at")
+    .order("created_at", { ascending:false })
+    .limit(100);
 
-  const posts = getPosts().slice().reverse();
-
-  if (posts.length === 0) {
-    list.textContent = "まだ相談は投稿されていません。";
+  if (error) {
+    console.error(error);
+    postList.textContent =
+      "相談を読み込めませんでした。データベース設定を確認してください。";
     return;
   }
+
+  if (!posts || posts.length === 0) {
+    postList.textContent = "まだ相談は投稿されていません。";
+    return;
+  }
+
+  const postIds = posts.map(post => post.id);
+
+  const { data: replies, error: replyError } = await db
+    .from("chat_replies")
+    .select("id,post_id,user_id,content,created_at")
+    .in("post_id", postIds)
+    .order("created_at", { ascending:true });
+
+  if (replyError) {
+    console.error(replyError);
+    postList.textContent =
+      "返信を読み込めませんでした。設定を確認してください。";
+    return;
+  }
+
+  renderPosts(posts, replies || []);
+}
+
+function renderPosts(posts, replies) {
+  postList.replaceChildren();
 
   posts.forEach(post => {
     const card = document.createElement("div");
@@ -197,29 +265,58 @@ function renderPosts() {
 
     const date = document.createElement("div");
     date.className = "post-date";
-    date.textContent = post.createdAt;
+    date.textContent = showDate(post.created_at);
 
     const content = document.createElement("p");
-    content.textContent = post.text;
+    content.textContent = post.content;
 
-    card.append(category, title, date, content);
+    card.append(category,title,date,content);
 
     const replyTitle = document.createElement("h4");
     replyTitle.textContent = "💬 返信";
     card.appendChild(replyTitle);
 
-    (post.replies || []).forEach(reply => {
-      const replyBox = document.createElement("div");
-      replyBox.className = "reply";
+    const postReplies = replies.filter(
+      reply => reply.post_id === post.id
+    );
 
-      const replyText = document.createElement("p");
-      replyText.textContent = reply.text;
+    postReplies.forEach(reply => {
+      const box = document.createElement("div");
+      box.className = "reply";
 
-      const replyDate = document.createElement("small");
-      replyDate.textContent = reply.createdAt;
+      const text = document.createElement("p");
+      text.textContent = reply.content;
 
-      replyBox.append(replyText, replyDate);
-      card.appendChild(replyBox);
+      const date = document.createElement("small");
+      date.textContent = showDate(reply.created_at);
+
+      box.append(text,date);
+
+      if (reply.user_id === currentUser.id) {
+        const deleteReply = makeButton("🗑️ 返信を削除");
+
+        deleteReply.onclick = async () => {
+          if (!confirm("この返信を削除しますか？")) return;
+
+          const { error } = await db
+            .from("chat_replies")
+            .delete()
+            .eq("id",reply.id)
+            .eq("user_id",currentUser.id);
+
+          if (error) {
+            console.error(error);
+            alert("返信を削除できませんでした。");
+            return;
+          }
+
+          await loadPosts();
+        };
+
+        box.appendChild(deleteReply);
+      }
+
+      card.appendChild(box);
     });
 
     const replyForm = document.createElement("form");
@@ -235,114 +332,114 @@ function renderPosts() {
     replyButton.type = "submit";
     replyButton.textContent = "返信";
 
-    replyForm.append(replyInput, replyButton);
+    replyForm.append(replyInput,replyButton);
 
-    replyForm.addEventListener("submit", e => {
+    replyForm.addEventListener("submit", async e => {
       e.preventDefault();
 
       const text = replyInput.value.trim();
-      if (!text) return;
+      if (!text || !currentUser) return;
 
-      const posts = getPosts();
-      const target = posts.find(p => p.id === post.id);
+      replyButton.disabled = true;
 
-      if (!target) return;
+      const { error } = await db
+        .from("chat_replies")
+        .insert({
+          post_id:post.id,
+          user_id:currentUser.id,
+          content:text
+        });
 
-      if (!Array.isArray(target.replies)) {
-        target.replies = [];
-      }
+      replyButton.disabled = false;
 
-      target.replies.push({
-        id: crypto.randomUUID(),
-        text: text,
-        createdAt: new Date().toLocaleString("ja-JP")
-      });
-
-      try {
-        savePosts(posts);
-        renderPosts();
-      } catch (error) {
+      if (error) {
         console.error(error);
         alert("返信を保存できませんでした。");
+        return;
       }
+
+      await loadPosts();
     });
 
     card.appendChild(replyForm);
 
-    const actions = document.createElement("div");
-    actions.className = "post-actions";
+    if (post.user_id === currentUser.id) {
+      const actions = document.createElement("div");
+      actions.className = "post-actions";
 
-    const deleteButton = document.createElement("button");
-    deleteButton.className = "btn light";
-    deleteButton.textContent = "🗑️ 投稿を削除";
+      const deleteButton = makeButton("🗑️ 投稿を削除");
 
-    deleteButton.onclick = () => {
-      if (!confirm("この相談と返信を削除しますか？")) {
-        return;
-      }
+      deleteButton.onclick = async () => {
+        if (!confirm("この相談を削除しますか？")) return;
 
-      try {
-        const updated = getPosts()
-          .filter(p => p.id !== post.id);
+        const { error } = await db
+          .from("chat_posts")
+          .delete()
+          .eq("id",post.id)
+          .eq("user_id",currentUser.id);
 
-        savePosts(updated);
-        renderPosts();
-      } catch (error) {
-        console.error(error);
-        alert("削除できませんでした。");
-      }
-    };
+        if (error) {
+          console.error(error);
+          alert("投稿を削除できませんでした。");
+          return;
+        }
 
-    actions.appendChild(deleteButton);
-    card.appendChild(actions);
+        await loadPosts();
+      };
 
-    list.appendChild(card);
+      actions.appendChild(deleteButton);
+      card.appendChild(actions);
+    }
+
+    postList.appendChild(card);
   });
 }
 
-document.getElementById("postForm")
-  .addEventListener("submit", function(e) {
-    e.preventDefault();
+postForm.addEventListener("submit", async e => {
+  e.preventDefault();
 
-    const category =
-      document.getElementById("postCategory").value;
+  if (!currentUser) {
+    alert("先にホーム画面でログインしてください。");
+    return;
+  }
 
-    const title =
-      document.getElementById("postTitle").value.trim();
+  const category = document.getElementById("postCategory").value;
+  const title = document.getElementById("postTitle").value.trim();
+  const content = document.getElementById("postText").value.trim();
 
-    const text =
-      document.getElementById("postText").value.trim();
+  if (!title || !content) {
+    alert("タイトルと相談内容を入力してください。");
+    return;
+  }
 
-    if (!title || !text) {
-      alert("タイトルと相談内容を入力してね！");
-      return;
-    }
+  postButton.disabled = true;
 
-    const post = {
-      id: crypto.randomUUID(),
-      category: category,
-      title: title,
-      text: text,
-      createdAt: new Date().toLocaleString("ja-JP"),
-      replies: []
-    };
+  const { error } = await db
+    .from("chat_posts")
+    .insert({
+      user_id:currentUser.id,
+      category,
+      title,
+      content
+    });
 
-    try {
-      const posts = getPosts();
-      posts.push(post);
-      savePosts(posts);
+  postButton.disabled = false;
 
-      this.reset();
-      renderPosts();
+  if (error) {
+    console.error(error);
+    alert("投稿を保存できませんでした。");
+    return;
+  }
 
-      alert("相談を保存しました！🌷");
-    } catch (error) {
-      console.error(error);
-      alert("投稿を保存できませんでした。");
-    }
-  });
+  postForm.reset();
+  alert("相談を投稿しました！🌷");
+  await loadPosts();
+});
 
-renderPosts();
+document.getElementById("reloadButton")
+  .addEventListener("click", loadPosts);
+
+initChat();
 </script>
 
 </body>
