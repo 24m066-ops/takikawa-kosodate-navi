@@ -1,4 +1,310 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>イベント情報｜たきかわ子育てナビ</title><link rel="stylesheet" href="style.css"></head><body><div class="app"><header class="top"><a class="logo" href="index.html">🌷 たきかわ子育てナビ<small>毎日の子育てを、もっと安心・もっと楽しく</small></a><nav class="menu"><a href="events.html">📅 イベント</a><a href="notifications.html">🔔 通知</a><a href="places.html">📍 施設</a><a href="records.html">🌱 記録</a><a href="contact.html">📖 連絡帳</a><a href="chat.html">💬 相談</a></nav></header><section class="section"><div class="title"><h2>📅 子育てイベント</h2><p>気になるイベントを見つけよう</p></div><div class="tabs"><button class="active">すべて</button><button>今週</button><button>今月</button></div>
-<div class="event"><div class="date">9/20</div><div><b>親子ふれあい広場</b><br><span class="badge">親子向け</span> 親子で楽しめる遊びや交流会<br><small>場所：滝川市内</small></div><button class="btn light" onclick="alert('イベントをお気に入りに登録しました！')">♡</button></div>
-<div class="event"><div class="date">9/27</div><div><b>子育て相談会</b><br><span class="badge">相談</span> 子育てのちょっとした悩みを相談できます</div><button class="btn light" onclick="alert('参加予定に登録しました！')">参加</button></div>
-</section><footer class="footer">🌷 たきかわ子育てナビ<br><small>子育てする人みんなが、安心して暮らせるまちへ。</small></footer></div><script src="app.js"></script></body></html>
+
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>イベント情報｜たきかわ子育てナビ</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .calendar {
+      background: white;
+      padding: 20px;
+      border-radius: 20px;
+      margin: 20px 0;
+    }
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .calendar-header button {
+      border: none;
+      border-radius: 12px;
+      background: #f8d9cf;
+      padding: 10px 15px;
+      cursor: pointer;
+    }
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0,1fr));
+      gap: 5px;
+    }
+    .calendar-grid button {
+      min-height: 48px;
+      border: 1px solid #eee;
+      border-radius: 10px;
+      background: white;
+      cursor: pointer;
+    }
+    .calendar-grid button:disabled {
+      cursor: default;
+    }
+    .calendar-grid .selected {
+      background: #80bfb4;
+      color: white;
+    }
+    .calendar-grid .has-event {
+      border: 2px solid #80bfb4;
+      font-weight: bold;
+    }
+    .weekday {
+      text-align: center;
+      font-size: 13px;
+      padding: 8px 0;
+    }
+    .event-list {
+      margin-top: 20px;
+    }
+    .event {
+      margin-bottom: 12px;
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <header class="top">
+    <a class="logo" href="index.html">
+      🌷 たきかわ子育てナビ
+      <small>毎日の子育てを、もっと安心・もっと楽しく</small>
+    </a>
+    <nav class="menu">
+      <a href="events.html">📅 イベント</a>
+      <a href="notifications.html">🔔 通知</a>
+      <a href="places.html">📍 施設</a>
+      <a href="favorites.html">❤️ お気に入り</a>
+      <a href="records.html">🌱 記録</a>
+      <a href="contact.html">📖 連絡帳</a>
+      <a href="chat.html">💬 相談</a>
+    </nav>
+  </header>
+
+  <section class="section">
+    <div class="title">
+      <h2>📅 子育てイベント</h2>
+      <p>気になるイベントを見つけよう</p>
+    </div>
+
+    <div class="calendar">
+      <div class="calendar-header">
+        <button onclick="changeMonth(-1)">◀ 前月</button>
+        <h3 id="calendarTitle"></h3>
+        <button onclick="changeMonth(1)">翌月 ▶</button>
+      </div>
+      <div id="calendarGrid" class="calendar-grid"></div>
+    </div>
+
+    <div class="tabs">
+      <button onclick="setFilter('all',this)" class="active">すべて</button>
+      <button onclick="setFilter('week',this)">今週</button>
+      <button onclick="setFilter('month',this)">今月</button>
+    </div>
+
+    <div id="selectedDate"></div>
+    <div id="eventList" class="event-list"></div>
+
+    <p style="font-size:12px;color:#777;">
+      ※ 現在のイベントは動作確認用のサンプルです。
+      実際の開催日時は公式情報を確認してください。
+    </p>
+  </section>
+
+  <footer class="footer">
+    🌷 たきかわ子育てナビ
+    <small>子育てする人みんなが、安心して暮らせるまちへ。</small>
+  </footer>
+</div>
+
+<script>
+const events = [
+  {
+    id: "sample1",
+    date: "2026-09-20",
+    title: "親子ふれあい広場",
+    type: "親子向け",
+    description: "親子で楽しめる遊びや交流会",
+    place: "滝川市内（サンプル）"
+  },
+  {
+    id: "sample2",
+    date: "2026-09-27",
+    title: "子育て相談会",
+    type: "相談",
+    description: "子育ての悩みを相談できます",
+    place: "滝川市内（サンプル）"
+  }
+];
+
+const today = new Date();
+let year = today.getFullYear();
+let month = today.getMonth();
+let selected = null;
+let filter = "all";
+
+function localDate(d) {
+  return d.getFullYear() + "-"
+    + String(d.getMonth()+1).padStart(2,"0") + "-"
+    + String(d.getDate()).padStart(2,"0");
+}
+
+function changeMonth(n) {
+  const d = new Date(year, month+n, 1);
+  year = d.getFullYear();
+  month = d.getMonth();
+  selected = null;
+  renderCalendar();
+  renderEvents();
+}
+
+function renderCalendar() {
+  document.getElementById("calendarTitle").textContent =
+    year + "年" + (month+1) + "月";
+
+  const grid = document.getElementById("calendarGrid");
+  grid.innerHTML = "";
+
+  ["日","月","火","水","木","金","土"].forEach(w => {
+    const label = document.createElement("div");
+    label.className = "weekday";
+    label.textContent = w;
+    grid.appendChild(label);
+  });
+
+  const first = new Date(year,month,1).getDay();
+  const days = new Date(year,month+1,0).getDate();
+
+  for (let i=0; i<first; i++) {
+    grid.appendChild(document.createElement("div"));
+  }
+
+  for (let day=1; day<=days; day++) {
+    const date = localDate(new Date(year,month,day));
+    const button = document.createElement("button");
+    button.textContent = day;
+
+    if (events.some(e => e.date === date)) {
+      button.classList.add("has-event");
+    }
+    if (selected === date) {
+      button.classList.add("selected");
+    }
+
+    button.onclick = () => {
+      selected = selected === date ? null : date;
+      filter = "all";
+      document.querySelectorAll(".tabs button").forEach((b,i) => {
+        b.classList.toggle("active",i===0);
+      });
+      renderCalendar();
+      renderEvents();
+    };
+
+    grid.appendChild(button);
+  }
+}
+
+function setFilter(value,button) {
+  filter = value;
+  selected = null;
+  document.querySelectorAll(".tabs button").forEach(b => {
+    b.classList.toggle("active",b===button);
+  });
+  renderCalendar();
+  renderEvents();
+}
+
+function getFavorites() {
+  try {
+    return JSON.parse(localStorage.getItem("eventFavorites") || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function toggleFavorite(id) {
+  let favorites = getFavorites();
+
+  if (favorites.includes(id)) {
+    favorites = favorites.filter(x => x !== id);
+  } else {
+    favorites.push(id);
+  }
+
+  localStorage.setItem("eventFavorites",JSON.stringify(favorites));
+  renderEvents();
+}
+
+function renderEvents() {
+  const list = document.getElementById("eventList");
+  const dateLabel = document.getElementById("selectedDate");
+  const now = new Date();
+
+  let filtered = events;
+
+  if (selected) {
+    filtered = events.filter(e => e.date === selected);
+    dateLabel.textContent = selected + " のイベント";
+  } else {
+    dateLabel.textContent = "";
+
+    if (filter === "week") {
+      const start = new Date(now.getFullYear(),now.getMonth(),now.getDate());
+      const end = new Date(start);
+      end.setDate(end.getDate()+7);
+
+      filtered = events.filter(e => {
+        const d = new Date(e.date+"T12:00:00");
+        return d >= start && d < end;
+      });
+    } else if (filter === "month") {
+      const prefix = localDate(now).slice(0,7);
+      filtered = events.filter(e => e.date.startsWith(prefix));
+    }
+  }
+
+  list.innerHTML = "";
+
+  if (filtered.length === 0) {
+    list.textContent = "この期間のイベントはありません。";
+    return;
+  }
+
+  const favorites = getFavorites();
+
+  filtered.forEach(e => {
+    const card = document.createElement("div");
+    card.className = "event";
+
+    const date = document.createElement("div");
+    date.className = "date";
+    date.textContent = e.date.slice(5).replace("-","/");
+
+    const info = document.createElement("div");
+    const title = document.createElement("b");
+    title.textContent = e.title;
+
+    const details = document.createElement("p");
+    details.textContent =
+      e.type + "｜" + e.description + "｜場所：" + e.place;
+
+    info.append(title,details);
+
+    const button = document.createElement("button");
+    button.className = "btn light";
+    button.textContent = favorites.includes(e.id)
+      ? "♥ 登録済み" : "♡ お気に入り";
+    button.onclick = () => toggleFavorite(e.id);
+
+    card.append(date,info,button);
+    list.appendChild(card);
+  });
+}
+
+renderCalendar();
+renderEvents();
+</script>
+</body>
+</html>
