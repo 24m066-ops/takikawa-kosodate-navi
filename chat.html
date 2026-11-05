@@ -1,1 +1,349 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>相談・チャット｜たきかわ子育てナビ</title><link rel="stylesheet" href="style.css"></head><body><div class="app"><header class="top"><a class="logo" href="index.html">🌷 たきかわ子育てナビ<small>毎日の子育てを、もっと安心・もっと楽しく</small></a><nav class="menu"><a href="events.html">📅 イベント</a><a href="notifications.html">🔔 通知</a><a href="places.html">📍 施設</a><a href="records.html">🌱 記録</a><a href="contact.html">📖 連絡帳</a><a href="chat.html">💬 相談</a></nav></header><section class="section"><div class="title"><h2>💬 相談・チャット</h2><p>子育ての悩みや情報をみんなで共有</p></div><div class="chat"><div class="bubble">👩「おすすめの公園ありますか？」</div><div class="bubble">👩‍🍼「○○公園は遊具が多くておすすめです🌷」</div><div id="chatList"></div><div class="chatbar"><input id="chatInput" placeholder="メッセージを入力"><button class="btn green" onclick="sendChat()">送信</button></div></div></section><footer class="footer">🌷 たきかわ子育てナビ<br><small>子育てする人みんなが、安心して暮らせるまちへ。</small></footer></div><script src="app.js"></script></body></html>
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>相談・チャット｜たきかわ子育てナビ</title>
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    .chat-box {
+      background: white;
+      padding: 22px;
+      border-radius: 20px;
+      margin: 20px 0;
+    }
+
+    .chat-box input,
+    .chat-box select,
+    .chat-box textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px;
+      margin: 8px 0 15px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      font: inherit;
+    }
+
+    .chat-box label {
+      display: block;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    .post-card {
+      background: white;
+      padding: 20px;
+      border-radius: 18px;
+      margin: 15px 0;
+    }
+
+    .post-card p {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .reply {
+      background: #f3f9f6;
+      padding: 12px;
+      border-radius: 12px;
+      margin: 10px 0;
+    }
+
+    .reply-form {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .reply-form input {
+      flex: 1;
+      min-width: 0;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+    }
+
+    .post-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .post-date {
+      color: #888;
+      font-size: 12px;
+    }
+  </style>
+</head>
+
+<body>
+<div class="app">
+
+  <header class="top">
+    <a class="logo" href="index.html">
+      🌷 たきかわ子育てナビ
+      <small>毎日の子育てを、もっと安心・もっと楽しく</small>
+    </a>
+
+    <nav class="menu">
+      <a href="events.html">📅 イベント</a>
+      <a href="notifications.html">🔔 通知</a>
+      <a href="places.html">📍 施設</a>
+      <a href="favorites.html">❤️ お気に入り</a>
+      <a href="records.html">🌱 記録</a>
+      <a href="contact.html">📖 連絡帳</a>
+      <a href="chat.html">💬 相談</a>
+    </nav>
+  </header>
+
+  <section class="section">
+
+    <div class="title">
+      <h2>💬 子育て相談ひろば</h2>
+      <p>子育ての悩みや情報を共有しよう</p>
+    </div>
+
+    <div class="chat-box">
+      <h3>🌷 新しく相談する</h3>
+
+      <form id="postForm">
+
+        <label for="postCategory">相談のカテゴリー</label>
+        <select id="postCategory">
+          <option>🌳 お出かけ・遊び場</option>
+          <option>🍚 食事・生活</option>
+          <option>🏫 保育所・幼稚園</option>
+          <option>💬 その他の相談</option>
+        </select>
+
+        <label for="postTitle">相談のタイトル</label>
+        <input id="postTitle"
+          placeholder="例：おすすめの公園を教えてください"
+          required maxlength="100">
+
+        <label for="postText">相談内容</label>
+        <textarea id="postText" rows="5"
+          placeholder="相談したいことを書いてね"
+          required maxlength="2000"></textarea>
+
+        <button class="btn green" type="submit">
+          📝 相談を投稿する
+        </button>
+      </form>
+    </div>
+
+    <h3>📚 みんなの相談（試作版）</h3>
+    <div id="postList"></div>
+
+    <p style="font-size:12px;color:#777;">
+      ※ 現在は試作版です。投稿や返信は、このブラウザ内だけに
+      保存されます。他の利用者には共有されません。
+      名前・住所・電話番号などの個人情報は入力しないでください。
+    </p>
+
+  </section>
+
+  <footer class="footer">
+    🌷 たきかわ子育てナビ
+    <small>子育てする人みんなが、安心して暮らせるまちへ。</small>
+  </footer>
+
+</div>
+
+<script>
+const chatStorageKey = "takikawaChatPosts";
+
+function getPosts() {
+  try {
+    const data = JSON.parse(
+      localStorage.getItem(chatStorageKey) || "[]"
+    );
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
+}
+
+function savePosts(posts) {
+  localStorage.setItem(
+    chatStorageKey,
+    JSON.stringify(posts)
+  );
+}
+
+function renderPosts() {
+  const list = document.getElementById("postList");
+  list.innerHTML = "";
+
+  const posts = getPosts().slice().reverse();
+
+  if (posts.length === 0) {
+    list.textContent = "まだ相談は投稿されていません。";
+    return;
+  }
+
+  posts.forEach(post => {
+    const card = document.createElement("div");
+    card.className = "post-card";
+
+    const category = document.createElement("small");
+    category.textContent = post.category;
+
+    const title = document.createElement("h3");
+    title.textContent = post.title;
+
+    const date = document.createElement("div");
+    date.className = "post-date";
+    date.textContent = post.createdAt;
+
+    const content = document.createElement("p");
+    content.textContent = post.text;
+
+    card.append(category, title, date, content);
+
+    const replyTitle = document.createElement("h4");
+    replyTitle.textContent = "💬 返信";
+    card.appendChild(replyTitle);
+
+    (post.replies || []).forEach(reply => {
+      const replyBox = document.createElement("div");
+      replyBox.className = "reply";
+
+      const replyText = document.createElement("p");
+      replyText.textContent = reply.text;
+
+      const replyDate = document.createElement("small");
+      replyDate.textContent = reply.createdAt;
+
+      replyBox.append(replyText, replyDate);
+      card.appendChild(replyBox);
+    });
+
+    const replyForm = document.createElement("form");
+    replyForm.className = "reply-form";
+
+    const replyInput = document.createElement("input");
+    replyInput.placeholder = "返信を入力";
+    replyInput.required = true;
+    replyInput.maxLength = 1000;
+
+    const replyButton = document.createElement("button");
+    replyButton.className = "btn green";
+    replyButton.type = "submit";
+    replyButton.textContent = "返信";
+
+    replyForm.append(replyInput, replyButton);
+
+    replyForm.addEventListener("submit", e => {
+      e.preventDefault();
+
+      const text = replyInput.value.trim();
+      if (!text) return;
+
+      const posts = getPosts();
+      const target = posts.find(p => p.id === post.id);
+
+      if (!target) return;
+
+      if (!Array.isArray(target.replies)) {
+        target.replies = [];
+      }
+
+      target.replies.push({
+        id: crypto.randomUUID(),
+        text: text,
+        createdAt: new Date().toLocaleString("ja-JP")
+      });
+
+      try {
+        savePosts(posts);
+        renderPosts();
+      } catch (error) {
+        console.error(error);
+        alert("返信を保存できませんでした。");
+      }
+    });
+
+    card.appendChild(replyForm);
+
+    const actions = document.createElement("div");
+    actions.className = "post-actions";
+
+    const deleteButton = document.createElement("button");
+    deleteButton.className = "btn light";
+    deleteButton.textContent = "🗑️ 投稿を削除";
+
+    deleteButton.onclick = () => {
+      if (!confirm("この相談と返信を削除しますか？")) {
+        return;
+      }
+
+      try {
+        const updated = getPosts()
+          .filter(p => p.id !== post.id);
+
+        savePosts(updated);
+        renderPosts();
+      } catch (error) {
+        console.error(error);
+        alert("削除できませんでした。");
+      }
+    };
+
+    actions.appendChild(deleteButton);
+    card.appendChild(actions);
+
+    list.appendChild(card);
+  });
+}
+
+document.getElementById("postForm")
+  .addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const category =
+      document.getElementById("postCategory").value;
+
+    const title =
+      document.getElementById("postTitle").value.trim();
+
+    const text =
+      document.getElementById("postText").value.trim();
+
+    if (!title || !text) {
+      alert("タイトルと相談内容を入力してね！");
+      return;
+    }
+
+    const post = {
+      id: crypto.randomUUID(),
+      category: category,
+      title: title,
+      text: text,
+      createdAt: new Date().toLocaleString("ja-JP"),
+      replies: []
+    };
+
+    try {
+      const posts = getPosts();
+      posts.push(post);
+      savePosts(posts);
+
+      this.reset();
+      renderPosts();
+
+      alert("相談を保存しました！🌷");
+    } catch (error) {
+      console.error(error);
+      alert("投稿を保存できませんでした。");
+    }
+  });
+
+renderPosts();
+</script>
+
+</body>
+</html>
