@@ -223,3 +223,31 @@ select:focus {
     transition: none;
   }
 }
+
+/* パスワード表示ボタン */
+.password-box {
+  position: relative;
+  width: 100%;
+}
+
+.password-box input {
+  width: 100%;
+  padding-right: 55px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 21px;
+  padding: 8px;
+  border-radius: 10px;
+}
+
+.password-toggle:hover {
+  background: #fff0e9;
+}
