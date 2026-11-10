@@ -146,7 +146,50 @@ async function showRecords() {
     </div>
   `).join("");
 }function sendContact(e){e.preventDefault();alert("連絡帳を送信しました！（デモ）");e.target.reset()}function sendChat(){let i=document.getElementById("chatInput"),v=i.value.trim();if(!v)return;document.getElementById("chatList").innerHTML+=`<div class="bubble me">${v}</div>`;i.value=""}showRecords();
-// ログイン処理
+
+/* ログイン・新規登録・ログアウト */
+
+let authMode = "login";
+
+function switchAuthMode(mode) {
+  authMode = mode;
+
+  const signup = mode === "signup";
+  const confirm = document.getElementById("confirmPassword");
+  const password = document.getElementById("loginPassword");
+
+  document.getElementById("loginTab")
+    .classList.toggle("active", !signup);
+  document.getElementById("signupTab")
+    .classList.toggle("active", signup);
+
+  confirm.style.display = signup ? "block" : "none";
+  confirm.required = signup;
+
+  password.autocomplete =
+    signup ? "new-password" : "current-password";
+
+  document.getElementById("authSubmit").textContent =
+    signup ? "🌷 アカウントを作成" : "ログイン";
+
+  document.getElementById("loginMessage").textContent = "";
+}
+
+async function updateAuthUI() {
+  const authArea = document.getElementById("authArea");
+  const loggedInArea = document.getElementById("loggedInArea");
+
+  if (!authArea || !loggedInArea) return;
+
+  const { data: { user }, error } =
+    await supabaseClient.auth.getUser();
+
+  const loggedIn = !!user && !error;
+
+  authArea.style.display = loggedIn ? "none" : "grid";
+  loggedInArea.style.display = loggedIn ? "grid" : "none";
+}
+
 const loginForm = document.getElementById("loginForm");
 
 if (loginForm) {
@@ -156,23 +199,86 @@ if (loginForm) {
     const email = document.getElementById("loginEmail").value.trim();
     const password = document.getElementById("loginPassword").value;
     const message = document.getElementById("loginMessage");
+    const submit = document.getElementById("authSubmit");
 
-    message.textContent = "ログイン中...";
+    submit.disabled = true;
 
-    const { data, error } = await supabaseClient.auth.signInWithPassword({
-      email: email,
-      password: password
-    });
+    try {
+      if (authMode === "signup") {
+        const confirm =
+          document.getElementById("confirmPassword").value;
 
-    if (error) {
-      message.textContent = "ログインできませんでした。メールアドレスとパスワードを確認してね。";
-      return;
+        if (password !== confirm) {
+          message.textContent = "パスワードが一致していません。";
+          return;
+        }
+
+        message.textContent = "登録しています...";
+
+        const { data, error } =
+          await supabaseClient.auth.signUp({
+            email,
+            password
+          });
+
+        if (error) throw error;
+
+        if (data.session) {
+          message.textContent = "登録できたよ！🌷";
+        } else {
+          message.textContent =
+            "確認メールを送信しました。メールのリンクから登録を完了してね！";
+        }
+
+      } else {
+        message.textContent = "ログイン中...";
+
+        const { error } =
+          await supabaseClient.auth.signInWithPassword({
+            email,
+            password
+          });
+
+        if (error) throw error;
+
+        message.textContent = "ログインできたよ！🌷";
+      }
+
+      loginForm.reset();
+      await updateAuthUI();
+
+    } catch (error) {
+      console.error(error);
+      message.textContent =
+        "処理できませんでした。入力内容やメールの確認状況を確認してね。";
+    } finally {
+      submit.disabled = false;
     }
-
-    message.textContent = "ログインできたよ！🌷";
-    await showRecords();
   });
+
+  updateAuthUI();
 }
+
+async function logout() {
+  const { error } = await supabaseClient.auth.signOut();
+
+  if (error) {
+    alert("ログアウトできませんでした。");
+    return;
+  }
+
+  document.getElementById("loginMessage").textContent =
+    "ログアウトしました。🌷";
+
+  await updateAuthUI();
+}
+
+supabaseClient.auth.onAuthStateChange(() => {
+  if (document.getElementById("authArea")) {
+    setTimeout(updateAuthUI, 0);
+  }
+});
+
 async function loadFavorites() {
   const buttons = document.querySelectorAll('#places .card button[onclick="fav(this)"]');
   if (buttons.length === 0) return;
