@@ -331,3 +331,19 @@ function showPlaceMap(place) {
     block: "center"
   });
 }
+
+
+function togglePassword(id, button) {
+  const input = document.getElementById(id);
+  if (!input) return;
+
+  const visible = input.type === "password";
+
+  input.type = visible ? "text" : "password";
+  button.textContent = visible ? "🙈" : "👁";
+  button.setAttribute("aria-pressed", String(visible));
+  button.setAttribute(
+    "aria-label",
+    visible ? "パスワードを隠す" : "パスワードを表示"
+  );
+}
