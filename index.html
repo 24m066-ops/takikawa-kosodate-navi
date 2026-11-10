@@ -18,14 +18,32 @@
       <input id="loginEmail" type="email"
         placeholder="メールアドレス" autocomplete="email" required>
 
-      <input id="loginPassword" type="password"
-        placeholder="パスワード" autocomplete="current-password"
-        minlength="6" required>
+      
+<div class="password-box">
+  <input id="loginPassword" type="password"
+    placeholder="パスワード"
+    autocomplete="current-password"
+    minlength="6" required>
 
-      <input id="confirmPassword" type="password"
-        placeholder="パスワード（確認用）"
-        autocomplete="new-password"
-        minlength="6" style="display:none">
+  <button type="button" class="password-toggle"
+    onclick="togglePassword('loginPassword', this)"
+    aria-label="パスワードを表示"
+    aria-pressed="false">👁</button>
+</div>
+
+<div class="password-box" id="confirmPasswordBox"
+  style="display:none">
+  <input id="confirmPassword" type="password"
+    placeholder="パスワード（確認用）"
+    autocomplete="new-password"
+    minlength="6">
+
+  <button type="button" class="password-toggle"
+    onclick="togglePassword('confirmPassword', this)"
+    aria-label="確認用パスワードを表示"
+    aria-pressed="false">👁</button>
+</div>
+
 
       <button class="btn" type="submit" id="authSubmit">
         ログイン
