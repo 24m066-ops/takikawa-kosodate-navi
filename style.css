@@ -251,3 +251,6 @@ select:focus {
 .password-toggle:hover {
   background: #fff0e9;
 }
+#confirmPasswordBox input {
+  width: 100%;
+}
