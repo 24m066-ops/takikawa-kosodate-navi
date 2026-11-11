@@ -163,8 +163,17 @@ function switchAuthMode(mode) {
   document.getElementById("signupTab")
     .classList.toggle("active", signup);
 
+  
+const confirmBox = document.getElementById("confirmPasswordBox");
+
+if (confirmBox) {
+  confirmBox.style.display = signup ? "block" : "none";
+} else {
   confirm.style.display = signup ? "block" : "none";
-  confirm.required = signup;
+}
+
+confirm.required = signup;
+
 
   password.autocomplete =
     signup ? "new-password" : "current-password";
