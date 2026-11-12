@@ -256,10 +256,11 @@ if (loginForm) {
       loginForm.reset();
       await updateAuthUI();
 
-    } catch (error) {
-      console.error(error);
-      message.textContent =
-        "処理できませんでした。入力内容やメールの確認状況を確認してね。";
+} catch (error) {
+  console.error("新規登録エラー:", error);
+  message.textContent =
+    "エラー: " + (error.message || "原因不明のエラー");
+
     } finally {
       submit.disabled = false;
     }
